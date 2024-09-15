@@ -15,7 +15,7 @@
     taskbar.style.display = 'flex';
     taskbar.style.alignItems = 'center';
     taskbar.style.justifyContent = 'center';
-    taskbar.style.zIndex = '10000';
+    taskbar.style.zIndex = '99999'; // Ensure taskbar is always on top
     document.body.appendChild(taskbar);
 
     function createButton(text, onclick) {
@@ -32,40 +32,24 @@
     }
 
     taskbar.appendChild(createButton('Open Calculator', function() {
+        bringToFront(calcWin);
         calcWin.style.display = 'block';
     }));
 
     taskbar.appendChild(createButton('Open Pong', function() {
+        bringToFront(pongWin);
         pongWin.style.display = 'block';
         startPong();
     }));
 
     taskbar.appendChild(createButton('Open YouTube Player', function() {
+        bringToFront(youtubeWin);
         youtubeWin.style.display = 'block';
     }));
 
-    var calcWin = document.createElement('div');
-    calcWin.style.position = 'absolute';
-    calcWin.style.top = '100px';
-    calcWin.style.left = '100px';
-    calcWin.style.width = '300px';
-    calcWin.style.height = '300px';
-    calcWin.style.backgroundColor = '#f0f0f0';
-    calcWin.style.border = '2px solid #000';
-    calcWin.style.resize = 'both';
-    calcWin.style.overflow = 'auto';
-    calcWin.style.zIndex = '9999';
-    calcWin.style.display = 'none';
+    // Calculator window
+    var calcWin = createWindow('100px', '100px', '300px', '300px', 'Calculator');
     document.body.appendChild(calcWin);
-
-    var closeCalcButton = createButton('X', function() {
-        calcWin.style.display = 'none';
-    });
-    closeCalcButton.style.backgroundColor = '#ff0000';
-    closeCalcButton.style.position = 'absolute';
-    closeCalcButton.style.top = '5px';
-    closeCalcButton.style.right = '5px';
-    calcWin.appendChild(closeCalcButton);
 
     var input = document.createElement('input');
     input.id = 'calcInput';
@@ -122,28 +106,9 @@
         return result;
     }
 
-    var pongWin = document.createElement('div');
-    pongWin.style.position = 'absolute';
-    pongWin.style.top = '100px';
-    pongWin.style.left = '500px';
-    pongWin.style.width = '400px';
-    pongWin.style.height = '300px';
-    pongWin.style.backgroundColor = '#fff';
-    pongWin.style.border = '2px solid #000';
-    pongWin.style.resize = 'both';
-    pongWin.style.overflow = 'auto';
-    pongWin.style.zIndex = '9999';
-    pongWin.style.display = 'none';
+    // Pong window
+    var pongWin = createWindow('100px', '500px', '400px', '300px', 'Pong');
     document.body.appendChild(pongWin);
-
-    var closePongButton = createButton('X', function() {
-        pongWin.style.display = 'none';
-    });
-    closePongButton.style.backgroundColor = '#ff0000';
-    closePongButton.style.position = 'absolute';
-    closePongButton.style.top = '5px';
-    closePongButton.style.right = '5px';
-    pongWin.appendChild(closePongButton);
 
     var pongCanvas = document.createElement('canvas');
     pongCanvas.width = 400;
@@ -225,28 +190,9 @@
         ballSpeedY = 2;
     }
 
-    var youtubeWin = document.createElement('div');
-    youtubeWin.style.position = 'absolute';
-    youtubeWin.style.top = '150px';
-    youtubeWin.style.left = '300px';
-    youtubeWin.style.width = '560px';
-    youtubeWin.style.height = '315px';
-    youtubeWin.style.backgroundColor = '#fff';
-    youtubeWin.style.border = '2px solid #000';
-    youtubeWin.style.resize = 'both';
-    youtubeWin.style.overflow = 'auto';
-    youtubeWin.style.zIndex = '9999';
-    youtubeWin.style.display = 'none';
+    // YouTube window
+    var youtubeWin = createWindow('150px', '300px', '560px', '315px', 'YouTube Player');
     document.body.appendChild(youtubeWin);
-
-    var closeYouTubeButton = createButton('X', function() {
-        youtubeWin.style.display = 'none';
-    });
-    closeYouTubeButton.style.backgroundColor = '#ff0000';
-    closeYouTubeButton.style.position = 'absolute';
-    closeYouTubeButton.style.top = '5px';
-    closeYouTubeButton.style.right = '5px';
-    youtubeWin.appendChild(closeYouTubeButton);
 
     var youtubeInput = document.createElement('input');
     youtubeInput.style.width = '90%';
@@ -268,4 +214,65 @@
     youtubeIframe.style.border = 'none';
     youtubeIframe.src = '';
     youtubeWin.appendChild(youtubeIframe);
+
+    function createWindow(top, left, width, height, title) {
+        var win = document.createElement('div');
+        win.style.position = 'absolute';
+        win.style.top = top;
+        win.style.left = left;
+        win.style.width = width;
+        win.style.height = height;
+        win.style.backgroundColor = '#f0f0f0';
+        win.style.border = '2px solid #000';
+        win.style.resize = 'both';
+        win.style.overflow = 'auto';
+        win.style.zIndex = '99999';
+        win.style.display = 'none';
+        win.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
+        
+        var titleBar = document.createElement('div');
+        titleBar.style.backgroundColor = '#444';
+        titleBar.style.color = '#fff';
+        titleBar.style.padding = '5px';
+        titleBar.style.cursor = 'move';
+        titleBar.textContent = title;
+        win.appendChild(titleBar);
+
+        var closeButton = createButton('X', function() {
+            win.style.display = 'none';
+        });
+        closeButton.style.backgroundColor = '#ff0000';
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '5px';
+        closeButton.style.right = '5px';
+        win.appendChild(closeButton);
+
+        // Dragging functionality
+        var isMouseDown = false;
+        var offsetX, offsetY;
+        titleBar.addEventListener('mousedown', function(e) {
+            isMouseDown = true;
+            offsetX = e.clientX - win.offsetLeft;
+            offsetY = e.clientY - win.offsetTop;
+        });
+        document.addEventListener('mousemove', function(e) {
+            if (isMouseDown) {
+                win.style.left = (e.clientX - offsetX) + 'px';
+                win.style.top = (e.clientY - offsetY) + 'px';
+            }
+        });
+        document.addEventListener('mouseup', function() {
+            isMouseDown = false;
+        });
+
+        return win;
+    }
+
+    function bringToFront(element) {
+        var windows = document.querySelectorAll('div');
+        windows.forEach(function(win) {
+            win.style.zIndex = '99999';
+        });
+        element.style.zIndex = '100000'; // Ensure the clicked window is always on top
+    }
 })();
