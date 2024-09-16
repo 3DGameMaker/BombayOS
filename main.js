@@ -47,6 +47,11 @@
         youtubeWin.style.display = 'block';
     }));
 
+    taskbar.appendChild(createButton('Open Notepad', function() {
+        bringToFront(notepadWin);
+        notepadWin.style.display = 'block';
+    }));
+
     // Calculator window
     var calcWin = createWindow('100px', '100px', '300px', '300px', 'Calculator');
     document.body.appendChild(calcWin);
@@ -215,17 +220,53 @@
     youtubeIframe.src = '';
     youtubeWin.appendChild(youtubeIframe);
 
-    function createWindow(top, left, width, height, title) {
+    // Notepad window
+    var notepadWin = createWindow('200px', '200px', '500px', '400px', 'Notepad');
+    document.body.appendChild(notepadWin);
+
+    var textArea = document.createElement('textarea');
+    textArea.style.width = '100%';
+    textArea.style.height = '80%';
+    textArea.style.margin = '10px 0';
+    notepadWin.appendChild(textArea);
+
+    // Upload file button
+    var uploadInput = document.createElement('input');
+    uploadInput.type = 'file';
+    uploadInput.style.margin = '10px';
+    uploadInput.onchange = function(e) {
+        var file = e.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                textArea.value = e.target.result;
+            };
+            reader.readAsText(file);
+        }
+    };
+    notepadWin.appendChild(uploadInput);
+
+    // Download button
+    var downloadButton = createButton('Download', function() {
+        var blob = new Blob([textArea.value], { type: 'text/plain' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'notepad.txt';
+        a.click();
+    });
+    notepadWin.appendChild(downloadButton);
+
+    // Create draggable windows
+    function createWindow(left, top, width, height, title) {
         var win = document.createElement('div');
         win.style.position = 'absolute';
-        win.style.top = top;
         win.style.left = left;
+        win.style.top = top;
         win.style.width = width;
         win.style.height = height;
-        win.style.backgroundColor = '#f0f0f0';
-        win.style.border = '2px solid #000';
-        win.style.resize = 'both';
-        win.style.overflow = 'auto';
+        win.style.backgroundColor = '#fff';
+        win.style.border = '2px solid #333';
         win.style.zIndex = '99999';
         win.style.display = 'none';
         win.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
