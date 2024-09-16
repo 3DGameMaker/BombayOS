@@ -52,6 +52,11 @@
         notepadWin.style.display = 'block';
     }));
 
+    taskbar.appendChild(createButton('Open Drawing App', function() {
+        bringToFront(drawingWin);
+        drawingWin.style.display = 'block';
+    }));
+
     // Calculator window
     var calcWin = createWindow('100px', '100px', '300px', '300px', 'Calculator');
     document.body.appendChild(calcWin);
@@ -121,17 +126,12 @@
     pongWin.appendChild(pongCanvas);
 
     var ctx = pongCanvas.getContext('2d');
-    var paddleWidth = 10,
-        paddleHeight = 60;
+    var paddleWidth = 10, paddleHeight = 60;
     var ballRadius = 10;
-    var playerY = pongCanvas.height / 2 - paddleHeight / 2,
-        aiY = playerY;
-    var ballX = pongCanvas.width / 2,
-        ballY = pongCanvas.height / 2;
-    var ballSpeedX = 2,
-        ballSpeedY = 2;
-    var playerScore = 0,
-        aiScore = 0;
+    var playerY = pongCanvas.height / 2 - paddleHeight / 2, aiY = playerY;
+    var ballX = pongCanvas.width / 2, ballY = pongCanvas.height / 2;
+    var ballSpeedX = 2, ballSpeedY = 2;
+    var playerScore = 0, aiScore = 0;
 
     function startPong() {
         document.addEventListener('keydown', function(e) {
@@ -230,90 +230,95 @@
     textArea.style.margin = '10px 0';
     notepadWin.appendChild(textArea);
 
-    // Upload file button
-    var uploadInput = document.createElement('input');
-    uploadInput.type = 'file';
-    uploadInput.style.margin = '10px';
-    uploadInput.onchange = function(e) {
-        var file = e.target.files[0];
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                textArea.value = e.target.result;
-            };
-            reader.readAsText(file);
-        }
-    };
-    notepadWin.appendChild(uploadInput);
-
-    // Download button
-    var downloadButton = createButton('Download', function() {
+    var saveButton = createButton('Save', function() {
         var blob = new Blob([textArea.value], { type: 'text/plain' });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement('a');
-        a.href = url;
-        a.download = 'notepad.txt';
-        a.click();
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'note.txt';
+        link.click();
     });
-    notepadWin.appendChild(downloadButton);
+    notepadWin.appendChild(saveButton);
 
-    // Create draggable windows
-    function createWindow(left, top, width, height, title) {
-        var win = document.createElement('div');
-        win.style.position = 'absolute';
-        win.style.left = left;
-        win.style.top = top;
-        win.style.width = width;
-        win.style.height = height;
-        win.style.backgroundColor = '#fff';
-        win.style.border = '2px solid #333';
-        win.style.zIndex = '99999';
-        win.style.display = 'none';
-        win.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
-        
-        var titleBar = document.createElement('div');
-        titleBar.style.backgroundColor = '#444';
-        titleBar.style.color = '#fff';
-        titleBar.style.padding = '5px';
-        titleBar.style.cursor = 'move';
-        titleBar.textContent = title;
-        win.appendChild(titleBar);
+    // Drawing app window
+    var drawingWin = createWindow('200px', '500px', '500px', '400px', 'Drawing App');
+    document.body.appendChild(drawingWin);
 
-        var closeButton = createButton('X', function() {
-            win.style.display = 'none';
-        });
-        closeButton.style.backgroundColor = '#ff0000';
-        closeButton.style.position = 'absolute';
-        closeButton.style.top = '5px';
-        closeButton.style.right = '5px';
-        win.appendChild(closeButton);
+    var canvas = document.createElement('canvas');
+    canvas.width = 500;
+    canvas.height = 400;
+    drawingWin.appendChild(canvas);
 
-        // Dragging functionality
-        var isMouseDown = false;
-        var offsetX, offsetY;
-        titleBar.addEventListener('mousedown', function(e) {
-            isMouseDown = true;
-            offsetX = e.clientX - win.offsetLeft;
-            offsetY = e.clientY - win.offsetTop;
-        });
-        document.addEventListener('mousemove', function(e) {
-            if (isMouseDown) {
-                win.style.left = (e.clientX - offsetX) + 'px';
-                win.style.top = (e.clientY - offsetY) + 'px';
-            }
-        });
-        document.addEventListener('mouseup', function() {
-            isMouseDown = false;
-        });
+    var ctxDrawing = canvas.getContext('2d');
+    var drawing = false;
 
-        return win;
-    }
+    canvas.addEventListener('mousedown', function(e) {
+        drawing = true;
+        ctxDrawing.beginPath();
+        ctxDrawing.moveTo(e.offsetX, e.offsetY);
+    });
 
-    function bringToFront(element) {
-        var windows = document.querySelectorAll('div');
+    canvas.addEventListener('mousemove', function(e) {
+        if (drawing) {
+            ctxDrawing.lineTo(e.offsetX, e.offsetY);
+            ctxDrawing.stroke();
+        }
+    });
+
+    canvas.addEventListener('mouseup', function() {
+        drawing = false;
+        ctxDrawing.closePath();
+    });
+
+    canvas.addEventListener('mouseleave', function() {
+        drawing = false;
+    });
+
+    function bringToFront(window) {
+        var windows = document.querySelectorAll('.window');
         windows.forEach(function(win) {
-            win.style.zIndex = '99999';
+            win.style.zIndex = '1';
         });
-        element.style.zIndex = '100000'; // Ensure the clicked window is always on top
+        window.style.zIndex = '100';
     }
+
+    function createWindow(left, top, width, height, title) {
+        var windowDiv = document.createElement('div');
+        windowDiv.classList.add('window');
+        windowDiv.style.position = 'absolute';
+        windowDiv.style.left = left;
+        windowDiv.style.top = top;
+        windowDiv.style.width = width;
+        windowDiv.style.height = height;
+        windowDiv.style.backgroundColor = '#f0f0f0';
+        windowDiv.style.border = '1px solid #333';
+        windowDiv.style.zIndex = '1';
+        windowDiv.style.display = 'none';
+
+        var header = document.createElement('div');
+        header.style.backgroundColor = '#333';
+        header.style.color = '#fff';
+        header.style.padding = '5px';
+        header.textContent = title;
+        windowDiv.appendChild(header);
+
+        header.onmousedown = function(e) {
+            var offsetX = e.clientX - windowDiv.offsetLeft;
+            var offsetY = e.clientY - windowDiv.offsetTop;
+
+            function moveWindow(e) {
+                windowDiv.style.left = e.clientX - offsetX + 'px';
+                windowDiv.style.top = e.clientY - offsetY + 'px';
+            }
+
+            document.addEventListener('mousemove', moveWindow);
+
+            document.onmouseup = function() {
+                document.removeEventListener('mousemove', moveWindow);
+                document.onmouseup = null;
+            };
+        };
+
+        return windowDiv;
+    }
+
 })();
