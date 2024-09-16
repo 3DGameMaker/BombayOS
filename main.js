@@ -57,6 +57,23 @@
         drawingWin.style.display = 'block';
     }));
 
+    // Function to create close button
+    function createCloseButton(window) {
+        var closeButton = document.createElement('button');
+        closeButton.textContent = 'X';
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '5px';
+        closeButton.style.right = '5px';
+        closeButton.style.backgroundColor = '#ff5c5c';
+        closeButton.style.border = 'none';
+        closeButton.style.color = 'white';
+        closeButton.style.cursor = 'pointer';
+        closeButton.onclick = function() {
+            window.style.display = 'none';
+        };
+        return closeButton;
+    }
+
     // Calculator window
     var calcWin = createWindow('100px', '100px', '300px', '300px', 'Calculator');
     document.body.appendChild(calcWin);
@@ -68,6 +85,8 @@
     input.style.marginBottom = '10px';
     input.readOnly = true;
     calcWin.appendChild(input);
+
+    calcWin.appendChild(createCloseButton(calcWin));
 
     var buttons = [7, 8, 9, '/', 4, 5, 6, '*', 1, 2, 3, '-', 0, '.', '+', 'C', '='];
     buttons.forEach(function(btn) {
@@ -124,6 +143,8 @@
     pongCanvas.width = 400;
     pongCanvas.height = 300;
     pongWin.appendChild(pongCanvas);
+
+    pongWin.appendChild(createCloseButton(pongWin));
 
     var ctx = pongCanvas.getContext('2d');
     var paddleWidth = 10, paddleHeight = 60;
@@ -199,6 +220,8 @@
     var youtubeWin = createWindow('150px', '300px', '560px', '315px', 'YouTube Player');
     document.body.appendChild(youtubeWin);
 
+    youtubeWin.appendChild(createCloseButton(youtubeWin));
+
     var youtubeInput = document.createElement('input');
     youtubeInput.style.width = '90%';
     youtubeInput.style.margin = '10px';
@@ -214,21 +237,21 @@
     youtubeWin.appendChild(goButton);
 
     var youtubeIframe = document.createElement('iframe');
-    youtubeIframe.style.width = '100%';
-    youtubeIframe.style.height = '90%';
-    youtubeIframe.style.border = 'none';
-    youtubeIframe.src = '';
+    youtubeIframe.width = '560';
+    youtubeIframe.height = '315';
+    youtubeIframe.frameBorder = '0';
     youtubeWin.appendChild(youtubeIframe);
 
     // Notepad window
-    var notepadWin = createWindow('200px', '200px', '500px', '400px', 'Notepad');
+    var notepadWin = createWindow('400px', '100px', '300px', '300px', 'Notepad');
     document.body.appendChild(notepadWin);
 
     var textArea = document.createElement('textarea');
     textArea.style.width = '100%';
     textArea.style.height = '80%';
-    textArea.style.margin = '10px 0';
     notepadWin.appendChild(textArea);
+
+    notepadWin.appendChild(createCloseButton(notepadWin));
 
     var saveButton = createButton('Save', function() {
         var blob = new Blob([textArea.value], { type: 'text/plain' });
@@ -247,6 +270,8 @@
     canvas.width = 500;
     canvas.height = 400;
     drawingWin.appendChild(canvas);
+
+    drawingWin.appendChild(createCloseButton(drawingWin));
 
     var ctxDrawing = canvas.getContext('2d');
     var drawing = false;
@@ -294,32 +319,17 @@
         windowDiv.style.zIndex = '1';
         windowDiv.style.display = 'none';
 
-        // Window Header (with title and close button)
         var header = document.createElement('div');
         header.style.backgroundColor = '#333';
         header.style.color = '#fff';
         header.style.padding = '5px';
-        header.style.display = 'flex';
-        header.style.justifyContent = 'space-between';
-        header.style.alignItems = 'center';
-
-        // Window title
-        var titleElem = document.createElement('span');
-        titleElem.textContent = title;
-        header.appendChild(titleElem);
-
-        // Close button
-        var closeButton = document.createElement('span');
-        closeButton.textContent = 'X';
-        closeButton.style.cursor = 'pointer';
-        closeButton.onclick = function() {
-            windowDiv.style.display = 'none';
-        };
-        header.appendChild(closeButton);
-
+        header.textContent = title;
         windowDiv.appendChild(header);
 
-        // Draggable functionality
+        // Attach close button to the window
+        var closeButton = createCloseButton(windowDiv);
+        windowDiv.appendChild(closeButton);
+
         header.onmousedown = function(e) {
             var offsetX = e.clientX - windowDiv.offsetLeft;
             var offsetY = e.clientY - windowDiv.offsetTop;
