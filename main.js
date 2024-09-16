@@ -294,13 +294,32 @@
         windowDiv.style.zIndex = '1';
         windowDiv.style.display = 'none';
 
+        // Window Header (with title and close button)
         var header = document.createElement('div');
         header.style.backgroundColor = '#333';
         header.style.color = '#fff';
         header.style.padding = '5px';
-        header.textContent = title;
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+
+        // Window title
+        var titleElem = document.createElement('span');
+        titleElem.textContent = title;
+        header.appendChild(titleElem);
+
+        // Close button
+        var closeButton = document.createElement('span');
+        closeButton.textContent = 'X';
+        closeButton.style.cursor = 'pointer';
+        closeButton.onclick = function() {
+            windowDiv.style.display = 'none';
+        };
+        header.appendChild(closeButton);
+
         windowDiv.appendChild(header);
 
+        // Draggable functionality
         header.onmousedown = function(e) {
             var offsetX = e.clientX - windowDiv.offsetLeft;
             var offsetY = e.clientY - windowDiv.offsetTop;
