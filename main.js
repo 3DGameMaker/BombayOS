@@ -15,7 +15,7 @@
     taskbar.style.display = 'flex';
     taskbar.style.alignItems = 'center';
     taskbar.style.justifyContent = 'center';
-    taskbar.style.zIndex = '99999';
+    taskbar.style.zIndex = '99999'; // Ensure taskbar is always on top
     document.body.appendChild(taskbar);
 
     function createButton(text, onclick) {
@@ -62,6 +62,7 @@
         settingsWin.style.display = 'block';
     }));
 
+    // Function to create close button
     function createCloseButton(window) {
         var closeButton = document.createElement('button');
         closeButton.textContent = 'X';
@@ -233,7 +234,8 @@
     youtubeWin.appendChild(youtubeInput);
 
     var goButton = createButton('Go', function() {
-        var videoID = youtubeInput.value.split('v=')[1];
+        var url = youtubeInput.value;
+        var videoID = url.split('v=')[1];
         if (videoID) {
             var ampersandPosition = videoID.indexOf('&');
             if (ampersandPosition !== -1) {
@@ -372,34 +374,33 @@
     drawingWin.appendChild(saveButtonDrawing);
 
     // Settings window
-    var settingsWin = createWindow('300px', '100px', '400px', '200px', 'Settings');
+    var settingsWin = createWindow('200px', '100px', '400px', '300px', 'Settings');
     document.body.appendChild(settingsWin);
 
-    var bgImageInput = document.createElement('input');
-    bgImageInput.type = 'text';
-    bgImageInput.style.width = '80%';
-    bgImageInput.style.margin = '10px';
-    bgImageInput.placeholder = 'Enter background image URL';
-    settingsWin.appendChild(bgImageInput);
+    var bgInput = document.createElement('input');
+    bgInput.type = 'text';
+    bgInput.style.width = '80%';
+    bgInput.style.margin = '10px';
+    bgInput.placeholder = 'Enter background image URL';
+    settingsWin.appendChild(bgInput);
 
-    var applyButton = createButton('Apply Background', function() {
-        var url = bgImageInput.value;
-        if (url) {
-            document.body.style.backgroundImage = 'url(' + url + ')';
-            document.body.style.backgroundSize = 'cover';
-            localStorage.setItem('backgroundImage', url);
-        }
+    var saveSettingsButton = createButton('Save Settings', function() {
+        var bgImageUrl = bgInput.value;
+        document.body.style.backgroundImage = 'url(' + bgImageUrl + ')';
+        document.body.style.backgroundSize = 'cover';
+        localStorage.setItem('backgroundImage', bgImageUrl);
     });
-    settingsWin.appendChild(applyButton);
+    settingsWin.appendChild(saveSettingsButton);
 
+    settingsWin.appendChild(createCloseButton(settingsWin));
+
+    // Load saved background image
     var savedBgImage = localStorage.getItem('backgroundImage');
     if (savedBgImage) {
         document.body.style.backgroundImage = 'url(' + savedBgImage + ')';
         document.body.style.backgroundSize = 'cover';
-        bgImageInput.value = savedBgImage;
+        bgInput.value = savedBgImage;
     }
-
-    settingsWin.appendChild(createCloseButton(settingsWin));
 
     function createWindow(top, left, width, height, title) {
         var win = document.createElement('div');
