@@ -62,7 +62,6 @@
         settingsWin.style.display = 'block';
     }));
 
-    // Function to create close button
     function createCloseButton(window) {
         var closeButton = document.createElement('button');
         closeButton.textContent = 'X';
@@ -77,6 +76,60 @@
             window.style.display = 'none';
         };
         return closeButton;
+    }
+
+    function createWindow(top, left, width, height, title) {
+        var win = document.createElement('div');
+        win.style.position = 'absolute';
+        win.style.top = top;
+        win.style.left = left;
+        win.style.width = width;
+        win.style.height = height;
+        win.style.border = '1px solid #000';
+        win.style.backgroundColor = '#fff';
+        win.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
+        win.style.zIndex = '100000'; // Ensure windows are above other content
+        win.style.display = 'none';
+        win.style.overflow = 'hidden';
+        win.style.resize = 'both';
+        win.style.padding = '10px';
+        win.style.boxSizing = 'border-box';
+
+        var titleBar = document.createElement('div');
+        titleBar.style.backgroundColor = '#666';
+        titleBar.style.color = '#fff';
+        titleBar.style.padding = '5px';
+        titleBar.style.cursor = 'move';
+        titleBar.textContent = title;
+        win.appendChild(titleBar);
+
+        titleBar.addEventListener('mousedown', function(e) {
+            var offsetX = e.clientX - win.offsetLeft;
+            var offsetY = e.clientY - win.offsetTop;
+
+            function onMouseMove(e) {
+                win.style.left = e.clientX - offsetX + 'px';
+                win.style.top = e.clientY - offsetY + 'px';
+            }
+
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        return win;
+    }
+
+    function bringToFront(win) {
+        var allWindows = document.querySelectorAll('div[style*="z-index: 100000"]');
+        allWindows.forEach(function(window) {
+            window.style.zIndex = '99999';
+        });
+        win.style.zIndex = '100000';
     }
 
     // Calculator window
@@ -177,81 +230,78 @@
         ctx.fill();
         ctx.font = '20px Arial';
         ctx.fillText('Player: ' + playerScore, 20, 30);
-        ctx.fillText('AI: ' + aiScore, pongCanvas.width - 80, 30);
+        ctx.fillText('AI: ' + aiScore, pongCanvas.width - 60, 30);
+
         ballX += ballSpeedX;
         ballY += ballSpeedY;
 
-        if (ballY <= ballRadius || ballY >= pongCanvas.height - ballRadius) ballSpeedY = -ballSpeedY;
-
-        if (ballX <= paddleWidth && ballY >= playerY && ballY <= playerY + paddleHeight) ballSpeedX = -ballSpeedX;
-        if (ballX >= pongCanvas.width - paddleWidth && ballY >= aiY && ballY <= aiY + paddleHeight) ballSpeedX = -ballSpeedX;
-
-        if (ballX < 0) {
-            ballX = pongCanvas.width / 2;
-            ballY = pongCanvas.height / 2;
-            ballSpeedX = -ballSpeedX;
-            aiScore++;
-            if (aiScore >= 21) {
-                alert('AI Wins!');
-                resetPong();
+        if (ballY + ballSpeedY > pongCanvas.height - ballRadius || ballY + ballSpeedY < ballRadius) ballSpeedY = -ballSpeedY;
+        if (ballX + ballSpeedX > pongCanvas.width - ballRadius) {
+            if (ballY > aiY && ballY < aiY + paddleHeight) ballSpeedX = -ballSpeedX;
+            else {
+                playerScore++;
+                resetBall();
+            }
+        }
+        if (ballX + ballSpeedX < ballRadius) {
+            if (ballY > playerY && ballY < playerY + paddleHeight) ballSpeedX = -ballSpeedX;
+            else {
+                aiScore++;
+                resetBall();
             }
         }
 
-        if (ballX > pongCanvas.width) {
-            ballX = pongCanvas.width / 2;
-            ballY = pongCanvas.height / 2;
-            ballSpeedX = -ballSpeedX;
-            playerScore++;
-            if (playerScore >= 21) {
-                alert('Player Wins!');
-                resetPong();
-            }
-        }
+        aiY += (ballY - (aiY + paddleHeight / 2)) * 0.1;
 
-        aiY += ballSpeedY * 0.75;
         requestAnimationFrame(drawPong);
     }
 
-    function resetPong() {
-        playerScore = 0;
-        aiScore = 0;
+    function resetBall() {
         ballX = pongCanvas.width / 2;
         ballY = pongCanvas.height / 2;
-        ballSpeedX = 2;
-        ballSpeedY = 2;
+        ballSpeedX = -ballSpeedX;
     }
 
-    // YouTube window
-    var youtubeWin = createWindow('150px', '300px', '560px', '315px', 'YouTube Player');
+    // YouTube Player window
+    var youtubeWin = createWindow('100px', '100px', '600px', '400px', 'YouTube Player');
     document.body.appendChild(youtubeWin);
 
-    youtubeWin.appendChild(createCloseButton(youtubeWin));
-
     var youtubeInput = document.createElement('input');
-    youtubeInput.style.width = '90%';
+    youtubeInput.type = 'text';
+    youtubeInput.style.width = '80%';
     youtubeInput.style.margin = '10px';
     youtubeInput.placeholder = 'Enter YouTube video URL';
     youtubeWin.appendChild(youtubeInput);
 
     var goButton = createButton('Go', function() {
         var url = youtubeInput.value;
-        var videoID = url.split('v=')[1];
+        var videoID = getYouTubeVideoID(url);
         if (videoID) {
-            var ampersandPosition = videoID.indexOf('&');
-            if (ampersandPosition !== -1) {
-                videoID = videoID.substring(0, ampersandPosition);
-            }
             var iframe = document.createElement('iframe');
-            iframe.width = '560';
-            iframe.height = '315';
+            iframe.width = '100%';
+            iframe.height = '100%';
             iframe.src = 'https://www.youtube.com/embed/' + videoID;
             iframe.frameBorder = '0';
             iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
             iframe.allowFullscreen = true;
+            youtubeWin.innerHTML = ''; // Clear previous content
             youtubeWin.appendChild(iframe);
+            youtubeWin.appendChild(createCloseButton(youtubeWin));
+        } else {
+            alert('Invalid YouTube URL');
         }
     });
     youtubeWin.appendChild(goButton);
+
+    function getYouTubeVideoID(url) {
+        var videoID = '';
+        var regex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|v\/|(?:.+[?&]v=)|(?:.*[?&]v=))|youtu\.be\/)([^"&?\/\s]{11})/;
+        var match = url.match(regex);
+        if (match) {
+            videoID = match[1];
+        }
+        return videoID;
+    }
 
     // Notepad window
     var notepadWin = createWindow('400px', '200px', '600px', '400px', 'Notepad');
@@ -400,59 +450,5 @@
         document.body.style.backgroundImage = 'url(' + savedBgImage + ')';
         document.body.style.backgroundSize = 'cover';
         bgInput.value = savedBgImage;
-    }
-
-    function createWindow(top, left, width, height, title) {
-        var win = document.createElement('div');
-        win.style.position = 'absolute';
-        win.style.top = top;
-        win.style.left = left;
-        win.style.width = width;
-        win.style.height = height;
-        win.style.border = '1px solid #000';
-        win.style.backgroundColor = '#fff';
-        win.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
-        win.style.zIndex = '100000'; // Ensure windows are above other content
-        win.style.display = 'none';
-        win.style.overflow = 'hidden';
-        win.style.resize = 'both';
-        win.style.padding = '10px';
-        win.style.boxSizing = 'border-box';
-
-        var titleBar = document.createElement('div');
-        titleBar.style.backgroundColor = '#666';
-        titleBar.style.color = '#fff';
-        titleBar.style.padding = '5px';
-        titleBar.style.cursor = 'move';
-        titleBar.textContent = title;
-        win.appendChild(titleBar);
-
-        titleBar.addEventListener('mousedown', function(e) {
-            var offsetX = e.clientX - win.offsetLeft;
-            var offsetY = e.clientY - win.offsetTop;
-
-            function onMouseMove(e) {
-                win.style.left = e.clientX - offsetX + 'px';
-                win.style.top = e.clientY - offsetY + 'px';
-            }
-
-            function onMouseUp() {
-                document.removeEventListener('mousemove', onMouseMove);
-                document.removeEventListener('mouseup', onMouseUp);
-            }
-
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
-        });
-
-        return win;
-    }
-
-    function bringToFront(win) {
-        var allWindows = document.querySelectorAll('div[style*="z-index: 100000"]');
-        allWindows.forEach(function(window) {
-            window.style.zIndex = '99999';
-        });
-        win.style.zIndex = '100000';
     }
 })();
