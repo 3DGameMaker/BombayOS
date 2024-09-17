@@ -57,6 +57,11 @@
         drawingWin.style.display = 'block';
     }));
 
+    taskbar.appendChild(createButton('Open HTML Viewer', function() {
+        bringToFront(htmlViewerWin);
+        htmlViewerWin.style.display = 'block';
+    }));
+
     // Function to create close button
     function createCloseButton(window) {
         var closeButton = document.createElement('button');
@@ -223,8 +228,6 @@
     youtubeWin.appendChild(createCloseButton(youtubeWin));
 
     var youtubeInput = document.createElement('input');
-    youtubeInput.style.width = '90%';
-    youtubeInput.style.margin = '10px';
     youtubeInput.placeholder = 'Enter YouTube video URL';
     youtubeWin.appendChild(youtubeInput);
 
@@ -315,6 +318,28 @@
     canvas.addEventListener('mouseleave', function() {
         drawing = false;
     });
+
+    // HTML Viewer window
+    var htmlViewerWin = createWindow('600px', '200px', '600px', '400px', 'HTML Viewer');
+    document.body.appendChild(htmlViewerWin);
+
+    var htmlTextArea = document.createElement('textarea');
+    htmlTextArea.style.width = '100%';
+    htmlTextArea.style.height = '50%';
+    htmlTextArea.placeholder = 'Enter your HTML code here...';
+    htmlViewerWin.appendChild(htmlTextArea);
+
+    var htmlIframe = document.createElement('iframe');
+    htmlIframe.style.width = '100%';
+    htmlIframe.style.height = '50%';
+    htmlViewerWin.appendChild(htmlIframe);
+
+    var viewHtmlButton = createButton('View HTML', function() {
+        htmlIframe.srcdoc = htmlTextArea.value; // Set iframe content to HTML entered in textarea
+    });
+    htmlViewerWin.appendChild(viewHtmlButton);
+
+    htmlViewerWin.appendChild(createCloseButton(htmlViewerWin));
 
     // Function to bring a window to the front
     function bringToFront(window) {
