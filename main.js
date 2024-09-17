@@ -231,145 +231,193 @@
     var goButton = createButton('Go', function() {
         var videoID = youtubeInput.value.split('v=')[1];
         if (videoID) {
-            youtubeIframe.src = 'https://www.youtube.com/embed/' + videoID;
+            var ampersandPosition = videoID.indexOf('&');
+            if (ampersandPosition !== -1) {
+                videoID = videoID.substring(0, ampersandPosition);
+            }
+            var iframe = document.createElement('iframe');
+            iframe.width = '560';
+            iframe.height = '315';
+            iframe.src = 'https://www.youtube.com/embed/' + videoID;
+            iframe.frameBorder = '0';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            youtubeWin.appendChild(iframe);
         }
     });
     youtubeWin.appendChild(goButton);
 
-    var youtubeIframe = document.createElement('iframe');
-    youtubeIframe.width = '560';
-    youtubeIframe.height = '315';
-    youtubeIframe.frameBorder = '0';
-    youtubeIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-    youtubeIframe.allowFullscreen = true;
-    youtubeWin.appendChild(youtubeIframe);
-
     // Notepad window
-    var notepadWin = createWindow('500px', '100px', '400px', '300px', 'Notepad');
+    var notepadWin = createWindow('400px', '200px', '600px', '400px', 'Notepad');
     document.body.appendChild(notepadWin);
 
     var notepadTextArea = document.createElement('textarea');
     notepadTextArea.style.width = '100%';
-    notepadTextArea.style.height = '90%';
+    notepadTextArea.style.height = 'calc(100% - 40px)';
+    notepadTextArea.style.fontSize = '16px';
+    notepadTextArea.style.padding = '10px';
+    notepadTextArea.style.border = 'none';
+    notepadTextArea.style.boxSizing = 'border-box';
     notepadWin.appendChild(notepadTextArea);
 
     notepadWin.appendChild(createCloseButton(notepadWin));
 
-    // Drawing app window
-    var drawingWin = createWindow('200px', '500px', '500px', '400px', 'Drawing App');
+    var uploadButton = createButton('Upload File', function() {
+        document.getElementById('notepadFileInput').click();
+    });
+    notepadWin.appendChild(uploadButton);
+
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.id = 'notepadFileInput';
+    fileInput.style.display = 'none';
+    fileInput.addEventListener('change', function(event) {
+        var file = event.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                notepadTextArea.value = e.target.result;
+            };
+            reader.readAsText(file);
+        }
+    });
+    document.body.appendChild(fileInput);
+
+    var saveButton = createButton('Save File', function() {
+        var blob = new Blob([notepadTextArea.value], { type: 'text/plain' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'note.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+    notepadWin.appendChild(saveButton);
+
+    // Drawing App window
+    var drawingWin = createWindow('400px', '500px', '600px', '400px', 'Drawing App');
     document.body.appendChild(drawingWin);
 
     var canvas = document.createElement('canvas');
-    canvas.width = 500;
+    canvas.width = 600;
     canvas.height = 400;
+    canvas.style.border = '1px solid #000';
     drawingWin.appendChild(canvas);
 
-    drawingWin.appendChild(createCloseButton(drawingWin));
-
     var ctxDrawing = canvas.getContext('2d');
-    var drawing = false;
-    var eraseMode = false; // Track whether erasing is enabled
+    ctxDrawing.fillStyle = '#fff';
+    ctxDrawing.fillRect(0, 0, canvas.width, canvas.height);
+    var isDrawing = false;
+    var lastX, lastY;
 
-    // Set the initial drawing color
-    var currentColor = '#000';
-
-    // Add the "Erase" button
-    var eraseButton = createButton('Erase', function() {
-        eraseMode = !eraseMode;
-        if (eraseMode) {
-            currentColor = '#f0f0f0'; // Erasing color matches canvas background
-            eraseButton.textContent = 'Draw'; // Change button text to "Draw"
-        } else {
-            currentColor = '#000'; // Back to drawing color
-            eraseButton.textContent = 'Erase'; // Change button text to "Erase"
-        }
-    });
-    drawingWin.appendChild(eraseButton);
-
-    // Add the "Clear Canvas" button
-    var clearButton = createButton('Clear Canvas', function() {
-        ctxDrawing.clearRect(0, 0, canvas.width, canvas.height);
-    });
-    drawingWin.appendChild(clearButton);
-
-    // Drawing functionality
     canvas.addEventListener('mousedown', function(e) {
-        drawing = true;
-        ctxDrawing.beginPath();
-        ctxDrawing.moveTo(e.offsetX, e.offsetY);
+        isDrawing = true;
+        lastX = e.offsetX;
+        lastY = e.offsetY;
     });
 
     canvas.addEventListener('mousemove', function(e) {
-        if (drawing) {
-            ctxDrawing.strokeStyle = currentColor; // Set the current drawing color (either black or erase color)
+        if (isDrawing) {
+            ctxDrawing.beginPath();
+            ctxDrawing.moveTo(lastX, lastY);
             ctxDrawing.lineTo(e.offsetX, e.offsetY);
             ctxDrawing.stroke();
+            lastX = e.offsetX;
+            lastY = e.offsetY;
         }
     });
 
     canvas.addEventListener('mouseup', function() {
-        drawing = false;
-        ctxDrawing.closePath();
+        isDrawing = false;
     });
 
-    canvas.addEventListener('mouseleave', function() {
-        drawing = false;
+    drawingWin.appendChild(createCloseButton(drawingWin));
+
+    var uploadButtonDrawing = createButton('Upload Image', function() {
+        document.getElementById('drawingFileInput').click();
     });
+    drawingWin.appendChild(uploadButtonDrawing);
 
-    // Function to bring a window to the front
-    function bringToFront(window) {
-        var windows = document.querySelectorAll('.window');
-        windows.forEach(function(win) {
-            win.style.zIndex = '1';
-        });
-        window.style.zIndex = '100';
-    }
+    var fileInputDrawing = document.createElement('input');
+    fileInputDrawing.type = 'file';
+    fileInputDrawing.id = 'drawingFileInput';
+    fileInputDrawing.style.display = 'none';
+    fileInputDrawing.addEventListener('change', function(event) {
+        var file = event.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = new Image();
+                img.onload = function() {
+                    ctxDrawing.clearRect(0, 0, canvas.width, canvas.height);
+                    ctxDrawing.drawImage(img, 0, 0, canvas.width, canvas.height);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    document.body.appendChild(fileInputDrawing);
 
-    // Function to create resizable window
-    function createWindow(left, top, width, height, title) {
-        var windowDiv = document.createElement('div');
-        windowDiv.classList.add('window');
-        windowDiv.style.position = 'absolute';
-        windowDiv.style.left = left;
-        windowDiv.style.top = top;
-        windowDiv.style.width = width;
-        windowDiv.style.height = height;
-        windowDiv.style.backgroundColor = '#f0f0f0';
-        windowDiv.style.border = '1px solid #333';
-        windowDiv.style.zIndex = '1';
-        windowDiv.style.display = 'none';
-        windowDiv.style.resize = 'both'; // Allow resizing
-        windowDiv.style.overflow = 'auto'; // Allow content scrolling if resized
+    var saveButtonDrawing = createButton('Save Drawing', function() {
+        var link = document.createElement('a');
+        link.download = 'drawing.png';
+        link.href = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+        link.click();
+    });
+    drawingWin.appendChild(saveButtonDrawing);
 
-        var header = document.createElement('div');
-        header.style.backgroundColor = '#333';
-        header.style.color = '#fff';
-        header.style.padding = '5px';
-        header.textContent = title;
-        windowDiv.appendChild(header);
+    function createWindow(top, left, width, height, title) {
+        var win = document.createElement('div');
+        win.style.position = 'absolute';
+        win.style.top = top;
+        win.style.left = left;
+        win.style.width = width;
+        win.style.height = height;
+        win.style.border = '1px solid #000';
+        win.style.backgroundColor = '#fff';
+        win.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
+        win.style.zIndex = '100000'; // Ensure windows are above other content
+        win.style.display = 'none';
+        win.style.overflow = 'hidden';
+        win.style.resize = 'both';
+        win.style.padding = '10px';
+        win.style.boxSizing = 'border-box';
 
-        // Attach close button to the window
-        var closeButton = createCloseButton(windowDiv);
-        windowDiv.appendChild(closeButton);
+        var titleBar = document.createElement('div');
+        titleBar.style.backgroundColor = '#666';
+        titleBar.style.color = '#fff';
+        titleBar.style.padding = '5px';
+        titleBar.style.cursor = 'move';
+        titleBar.textContent = title;
+        win.appendChild(titleBar);
 
-        // Draggable window functionality
-        header.onmousedown = function(e) {
-            var offsetX = e.clientX - windowDiv.offsetLeft;
-            var offsetY = e.clientY - windowDiv.offsetTop;
+        titleBar.addEventListener('mousedown', function(e) {
+            var offsetX = e.clientX - win.offsetLeft;
+            var offsetY = e.clientY - win.offsetTop;
 
-            function moveWindow(e) {
-                windowDiv.style.left = e.clientX - offsetX + 'px';
-                windowDiv.style.top = e.clientY - offsetY + 'px';
+            function onMouseMove(e) {
+                win.style.left = e.clientX - offsetX + 'px';
+                win.style.top = e.clientY - offsetY + 'px';
             }
 
-            document.addEventListener('mousemove', moveWindow);
+            function onMouseUp() {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            }
 
-            document.onmouseup = function() {
-                document.removeEventListener('mousemove', moveWindow);
-                document.onmouseup = null;
-            };
-        };
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
 
-        return windowDiv;
+        return win;
+    }
+
+    function bringToFront(win) {
+        var allWindows = document.querySelectorAll('div[style*="z-index: 100000"]');
+        allWindows.forEach(function(window) {
+            window.style.zIndex = '99999';
+        });
+        win.style.zIndex = '100000';
     }
 })();
