@@ -15,7 +15,7 @@
     taskbar.style.display = 'flex';
     taskbar.style.alignItems = 'center';
     taskbar.style.justifyContent = 'center';
-    taskbar.style.zIndex = '99999'; // Ensure taskbar is always on top
+    taskbar.style.zIndex = '99999';
     document.body.appendChild(taskbar);
 
     function createButton(text, onclick) {
@@ -57,7 +57,11 @@
         drawingWin.style.display = 'block';
     }));
 
-    // Function to create close button
+    taskbar.appendChild(createButton('Open Settings', function() {
+        bringToFront(settingsWin);
+        settingsWin.style.display = 'block';
+    }));
+
     function createCloseButton(window) {
         var closeButton = document.createElement('button');
         closeButton.textContent = 'X';
@@ -366,6 +370,36 @@
         link.click();
     });
     drawingWin.appendChild(saveButtonDrawing);
+
+    // Settings window
+    var settingsWin = createWindow('300px', '100px', '400px', '200px', 'Settings');
+    document.body.appendChild(settingsWin);
+
+    var bgImageInput = document.createElement('input');
+    bgImageInput.type = 'text';
+    bgImageInput.style.width = '80%';
+    bgImageInput.style.margin = '10px';
+    bgImageInput.placeholder = 'Enter background image URL';
+    settingsWin.appendChild(bgImageInput);
+
+    var applyButton = createButton('Apply Background', function() {
+        var url = bgImageInput.value;
+        if (url) {
+            document.body.style.backgroundImage = 'url(' + url + ')';
+            document.body.style.backgroundSize = 'cover';
+            localStorage.setItem('backgroundImage', url);
+        }
+    });
+    settingsWin.appendChild(applyButton);
+
+    var savedBgImage = localStorage.getItem('backgroundImage');
+    if (savedBgImage) {
+        document.body.style.backgroundImage = 'url(' + savedBgImage + ')';
+        document.body.style.backgroundSize = 'cover';
+        bgImageInput.value = savedBgImage;
+    }
+
+    settingsWin.appendChild(createCloseButton(settingsWin));
 
     function createWindow(top, left, width, height, title) {
         var win = document.createElement('div');
