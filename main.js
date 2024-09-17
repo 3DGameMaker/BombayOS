@@ -57,11 +57,6 @@
         drawingWin.style.display = 'block';
     }));
 
-    taskbar.appendChild(createButton('Open HTML Viewer', function() {
-        bringToFront(htmlViewerWin);
-        htmlViewerWin.style.display = 'block';
-    }));
-
     // Function to create close button
     function createCloseButton(window) {
         var closeButton = document.createElement('button');
@@ -79,15 +74,175 @@
         return closeButton;
     }
 
-    // Function to handle file uploads
-    function handleFileUpload(file, textArea, callback) {
-        var reader = new FileReader();
-        reader.onload = function(e) {
-            textArea.value = e.target.result;
-            if (callback) callback();
+    // Calculator window
+    var calcWin = createWindow('100px', '100px', '300px', '300px', 'Calculator');
+    document.body.appendChild(calcWin);
+
+    var input = document.createElement('input');
+    input.id = 'calcInput';
+    input.style.width = '100%';
+    input.style.fontSize = '20px';
+    input.style.marginBottom = '10px';
+    input.readOnly = true;
+    calcWin.appendChild(input);
+
+    calcWin.appendChild(createCloseButton(calcWin));
+
+    var buttons = [7, 8, 9, '/', 4, 5, 6, '*', 1, 2, 3, '-', 0, '.', '+', 'C', '='];
+    buttons.forEach(function(btn) {
+        var button = document.createElement('button');
+        button.textContent = btn;
+        button.style.width = '20%';
+        button.style.fontSize = '18px';
+        button.style.margin = '2px';
+        button.onclick = function() {
+            if (btn === '=') {
+                try {
+                    input.value = manualCalc(input.value);
+                } catch (e) {
+                    input.value = 'Error';
+                }
+            } else if (btn === 'C') {
+                input.value = '';
+            } else {
+                input.value += btn;
+            }
         };
-        reader.readAsText(file);
+        calcWin.appendChild(button);
+    });
+
+    function manualCalc(expression) {
+        let operators = ['+', '-', '*', '/'];
+        let tokens = expression.split(/([+\-*/])/);
+        tokens = tokens.map(t => t.trim()).filter(t => t.length > 0);
+        let result = parseFloat(tokens[0]);
+
+        for (let i = 1; i < tokens.length; i += 2) {
+            let operator = tokens[i];
+            let nextNum = parseFloat(tokens[i + 1]);
+
+            if (operator === '+') {
+                result += nextNum;
+            } else if (operator === '-') {
+                result -= nextNum;
+            } else if (operator === '*') {
+                result *= nextNum;
+            } else if (operator === '/') {
+                result /= nextNum;
+            }
+        }
+
+        return result;
     }
+
+    // Pong window
+    var pongWin = createWindow('100px', '500px', '400px', '300px', 'Pong');
+    document.body.appendChild(pongWin);
+
+    var pongCanvas = document.createElement('canvas');
+    pongCanvas.width = 400;
+    pongCanvas.height = 300;
+    pongWin.appendChild(pongCanvas);
+
+    pongWin.appendChild(createCloseButton(pongWin));
+
+    var ctx = pongCanvas.getContext('2d');
+    var paddleWidth = 10, paddleHeight = 60;
+    var ballRadius = 10;
+    var playerY = pongCanvas.height / 2 - paddleHeight / 2, aiY = playerY;
+    var ballX = pongCanvas.width / 2, ballY = pongCanvas.height / 2;
+    var ballSpeedX = 2, ballSpeedY = 2;
+    var playerScore = 0, aiScore = 0;
+
+    function startPong() {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowUp' && playerY > 0) playerY -= 20;
+            if (e.key === 'ArrowDown' && playerY < pongCanvas.height - paddleHeight) playerY += 20;
+        });
+        requestAnimationFrame(drawPong);
+    }
+
+    function drawPong() {
+        ctx.clearRect(0, 0, pongCanvas.width, pongCanvas.height);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, playerY, paddleWidth, paddleHeight);
+        ctx.fillRect(pongCanvas.width - paddleWidth, aiY, paddleWidth, paddleHeight);
+        ctx.beginPath();
+        ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = '20px Arial';
+        ctx.fillText('Player: ' + playerScore, 20, 30);
+        ctx.fillText('AI: ' + aiScore, pongCanvas.width - 80, 30);
+        ballX += ballSpeedX;
+        ballY += ballSpeedY;
+
+        if (ballY <= ballRadius || ballY >= pongCanvas.height - ballRadius) ballSpeedY = -ballSpeedY;
+
+        if (ballX <= paddleWidth && ballY >= playerY && ballY <= playerY + paddleHeight) ballSpeedX = -ballSpeedX;
+        if (ballX >= pongCanvas.width - paddleWidth && ballY >= aiY && ballY <= aiY + paddleHeight) ballSpeedX = -ballSpeedX;
+
+        if (ballX < 0) {
+            ballX = pongCanvas.width / 2;
+            ballY = pongCanvas.height / 2;
+            ballSpeedX = -ballSpeedX;
+            aiScore++;
+            if (aiScore >= 21) {
+                alert('AI Wins!');
+                resetPong();
+            }
+        }
+
+        if (ballX > pongCanvas.width) {
+            ballX = pongCanvas.width / 2;
+            ballY = pongCanvas.height / 2;
+            ballSpeedX = -ballSpeedX;
+            playerScore++;
+            if (playerScore >= 21) {
+                alert('Player Wins!');
+                resetPong();
+            }
+        }
+
+        aiY += ballSpeedY * 0.75;
+        requestAnimationFrame(drawPong);
+    }
+
+    function resetPong() {
+        playerScore = 0;
+        aiScore = 0;
+        ballX = pongCanvas.width / 2;
+        ballY = pongCanvas.height / 2;
+        ballSpeedX = 2;
+        ballSpeedY = 2;
+    }
+
+    // YouTube window
+    var youtubeWin = createWindow('150px', '300px', '560px', '315px', 'YouTube Player');
+    document.body.appendChild(youtubeWin);
+
+    youtubeWin.appendChild(createCloseButton(youtubeWin));
+
+    var youtubeInput = document.createElement('input');
+    youtubeInput.style.width = '90%';
+    youtubeInput.style.margin = '10px';
+    youtubeInput.placeholder = 'Enter YouTube video URL';
+    youtubeWin.appendChild(youtubeInput);
+
+    var goButton = createButton('Go', function() {
+        var videoID = youtubeInput.value.split('v=')[1];
+        if (videoID) {
+            youtubeIframe.src = 'https://www.youtube.com/embed/' + videoID;
+        }
+    });
+    youtubeWin.appendChild(goButton);
+
+    var youtubeIframe = document.createElement('iframe');
+    youtubeIframe.width = '560';
+    youtubeIframe.height = '315';
+    youtubeIframe.frameBorder = '0';
+    youtubeIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    youtubeIframe.allowFullscreen = true;
+    youtubeWin.appendChild(youtubeIframe);
 
     // Notepad window
     var notepadWin = createWindow('500px', '100px', '400px', '300px', 'Notepad');
@@ -95,58 +250,10 @@
 
     var notepadTextArea = document.createElement('textarea');
     notepadTextArea.style.width = '100%';
-    notepadTextArea.style.height = '80%';
+    notepadTextArea.style.height = '90%';
     notepadWin.appendChild(notepadTextArea);
 
-    // File upload button for Notepad
-    var fileInputNotepad = document.createElement('input');
-    fileInputNotepad.type = 'file';
-    fileInputNotepad.accept = '.txt';
-    fileInputNotepad.style.width = '100%';
-    fileInputNotepad.onchange = function(event) {
-        if (event.target.files.length > 0) {
-            handleFileUpload(event.target.files[0], notepadTextArea);
-        }
-    };
-    notepadWin.appendChild(fileInputNotepad);
-
     notepadWin.appendChild(createCloseButton(notepadWin));
-
-    // HTML Viewer window
-    var htmlViewerWin = createWindow('600px', '200px', '600px', '400px', 'HTML Viewer');
-    document.body.appendChild(htmlViewerWin);
-
-    var htmlTextArea = document.createElement('textarea');
-    htmlTextArea.style.width = '100%';
-    htmlTextArea.style.height = '50%';
-    htmlTextArea.placeholder = 'Enter your HTML code here...';
-    htmlViewerWin.appendChild(htmlTextArea);
-
-    var htmlIframe = document.createElement('iframe');
-    htmlIframe.style.width = '100%';
-    htmlIframe.style.height = '50%';
-    htmlViewerWin.appendChild(htmlIframe);
-
-    var viewHtmlButton = createButton('View HTML', function() {
-        htmlIframe.srcdoc = htmlTextArea.value; // Set iframe content to HTML entered in textarea
-    });
-    htmlViewerWin.appendChild(viewHtmlButton);
-
-    // File upload button for HTML Viewer
-    var fileInputHtml = document.createElement('input');
-    fileInputHtml.type = 'file';
-    fileInputHtml.accept = '.html';
-    fileInputHtml.style.width = '100%';
-    fileInputHtml.onchange = function(event) {
-        if (event.target.files.length > 0) {
-            handleFileUpload(event.target.files[0], htmlTextArea, function() {
-                htmlIframe.srcdoc = htmlTextArea.value; // Update iframe content after loading file
-            });
-        }
-    };
-    htmlViewerWin.appendChild(fileInputHtml);
-
-    htmlViewerWin.appendChild(createCloseButton(htmlViewerWin));
 
     // Drawing app window
     var drawingWin = createWindow('200px', '500px', '500px', '400px', 'Drawing App');
@@ -185,27 +292,6 @@
     });
     drawingWin.appendChild(clearButton);
 
-    // File upload button for Drawing App
-    var fileInputDrawing = document.createElement('input');
-    fileInputDrawing.type = 'file';
-    fileInputDrawing.accept = '.png,.jpg,.jpeg';
-    fileInputDrawing.style.width = '100%';
-    fileInputDrawing.onchange = function(event) {
-        if (event.target.files.length > 0) {
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var img = new Image();
-                img.onload = function() {
-                    ctxDrawing.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas before drawing the image
-                    ctxDrawing.drawImage(img, 0, 0, canvas.width, canvas.height);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(event.target.files[0]);
-        }
-    };
-    drawingWin.appendChild(fileInputDrawing);
-
     // Drawing functionality
     canvas.addEventListener('mousedown', function(e) {
         drawing = true;
@@ -230,123 +316,7 @@
         drawing = false;
     });
 
-    // Calculator window
-    var calcWin = createWindow('100px', '100px', '300px', '300px', 'Calculator');
-    document.body.appendChild(calcWin);
-
-    var input = document.createElement('input');
-    input.id = 'calcInput';
-    input.style.width = '100%';
-    input.style.fontSize = '24px';
-    calcWin.appendChild(input);
-
-    var buttons = [
-        '7', '8', '9', '/',
-        '4', '5', '6', '*',
-        '1', '2', '3', '-',
-        '0', '.', '=', '+'
-    ];
-
-    buttons.forEach(function(value) {
-        var button = createButton(value, function() {
-            var currentInput = document.getElementById('calcInput');
-            if (value === '=') {
-                try {
-                    currentInput.value = eval(currentInput.value);
-                } catch (e) {
-                    currentInput.value = 'Error';
-                }
-            } else {
-                currentInput.value += value;
-            }
-        });
-        calcWin.appendChild(button);
-    });
-
-    calcWin.appendChild(createCloseButton(calcWin));
-
-    // Pong game window
-    var pongWin = createWindow('800px', '100px', '600px', '400px', 'Pong');
-    document.body.appendChild(pongWin);
-
-    var canvasPong = document.createElement('canvas');
-    canvasPong.width = 600;
-    canvasPong.height = 400;
-    pongWin.appendChild(canvasPong);
-
-    var ctxPong = canvasPong.getContext('2d');
-    var ballRadius = 10;
-    var x = canvasPong.width / 2;
-    var y = canvasPong.height / 2;
-    var dx = 2;
-    var dy = -2;
-    var paddleHeight = 75;
-    var paddleWidth = 10;
-    var paddleX = (canvasPong.width - paddleWidth) / 2;
-    var paddleY = (canvasPong.height - paddleHeight) / 2;
-    var rightPressed = false;
-    var leftPressed = false;
-
-    function drawBall() {
-        ctxPong.beginPath();
-        ctxPong.arc(x, y, ballRadius, 0, Math.PI * 2);
-        ctxPong.fillStyle = '#0095DD';
-        ctxPong.fill();
-        ctxPong.closePath();
-    }
-
-    function drawPaddle() {
-        ctxPong.beginPath();
-        ctxPong.rect(paddleX, paddleY, paddleWidth, paddleHeight);
-        ctxPong.fillStyle = '#0095DD';
-        ctxPong.fill();
-        ctxPong.closePath();
-    }
-
-    function draw() {
-        ctxPong.clearRect(0, 0, canvasPong.width, canvasPong.height);
-        drawBall();
-        drawPaddle();
-
-        if (x + dx > canvasPong.width - ballRadius || x + dx < ballRadius) {
-            dx = -dx;
-        }
-        if (y + dy > canvasPong.height - ballRadius || y + dy < ballRadius) {
-            dy = -dy;
-        }
-
-        x += dx;
-        y += dy;
-
-        if (rightPressed && paddleX < canvasPong.width - paddleWidth) {
-            paddleX += 7;
-        } else if (leftPressed && paddleX > 0) {
-            paddleX -= 7;
-        }
-
-        requestAnimationFrame(draw);
-    }
-
-    function startPong() {
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Right' || e.key === 'ArrowRight') {
-                rightPressed = true;
-            } else if (e.key === 'Left' || e.key === 'ArrowLeft') {
-                leftPressed = true;
-            }
-        });
-
-        document.addEventListener('keyup', function(e) {
-            if (e.key === 'Right' || e.key === 'ArrowRight') {
-                rightPressed = false;
-            } else if (e.key === 'Left' || e.key === 'ArrowLeft') {
-                leftPressed = false;
-            }
-        });
-
-        draw();
-    }
-
+    // Function to bring a window to the front
     function bringToFront(window) {
         var windows = document.querySelectorAll('.window');
         windows.forEach(function(win) {
@@ -355,6 +325,7 @@
         window.style.zIndex = '100';
     }
 
+    // Function to create resizable window
     function createWindow(left, top, width, height, title) {
         var windowDiv = document.createElement('div');
         windowDiv.classList.add('window');
