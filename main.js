@@ -240,27 +240,20 @@
     youtubeIframe.width = '560';
     youtubeIframe.height = '315';
     youtubeIframe.frameBorder = '0';
+    youtubeIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    youtubeIframe.allowFullscreen = true;
     youtubeWin.appendChild(youtubeIframe);
 
     // Notepad window
-    var notepadWin = createWindow('400px', '100px', '300px', '300px', 'Notepad');
+    var notepadWin = createWindow('500px', '100px', '400px', '300px', 'Notepad');
     document.body.appendChild(notepadWin);
 
-    var textArea = document.createElement('textarea');
-    textArea.style.width = '100%';
-    textArea.style.height = '80%';
-    notepadWin.appendChild(textArea);
+    var notepadTextArea = document.createElement('textarea');
+    notepadTextArea.style.width = '100%';
+    notepadTextArea.style.height = '90%';
+    notepadWin.appendChild(notepadTextArea);
 
     notepadWin.appendChild(createCloseButton(notepadWin));
-
-    var saveButton = createButton('Save', function() {
-        var blob = new Blob([textArea.value], { type: 'text/plain' });
-        var link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'note.txt';
-        link.click();
-    });
-    notepadWin.appendChild(saveButton);
 
     // Drawing app window
     var drawingWin = createWindow('200px', '500px', '500px', '400px', 'Drawing App');
@@ -275,7 +268,31 @@
 
     var ctxDrawing = canvas.getContext('2d');
     var drawing = false;
+    var eraseMode = false; // Track whether erasing is enabled
 
+    // Set the initial drawing color
+    var currentColor = '#000';
+
+    // Add the "Erase" button
+    var eraseButton = createButton('Erase', function() {
+        eraseMode = !eraseMode;
+        if (eraseMode) {
+            currentColor = '#fff'; // Erasing color (white or canvas background color)
+            eraseButton.textContent = 'Draw'; // Change button text to "Draw"
+        } else {
+            currentColor = '#000'; // Back to drawing color
+            eraseButton.textContent = 'Erase'; // Change button text to "Erase"
+        }
+    });
+    drawingWin.appendChild(eraseButton);
+
+    // Add the "Clear Canvas" button
+    var clearButton = createButton('Clear Canvas', function() {
+        ctxDrawing.clearRect(0, 0, canvas.width, canvas.height);
+    });
+    drawingWin.appendChild(clearButton);
+
+    // Drawing functionality
     canvas.addEventListener('mousedown', function(e) {
         drawing = true;
         ctxDrawing.beginPath();
@@ -284,6 +301,7 @@
 
     canvas.addEventListener('mousemove', function(e) {
         if (drawing) {
+            ctxDrawing.strokeStyle = currentColor; // Set the current drawing color (either black or white)
             ctxDrawing.lineTo(e.offsetX, e.offsetY);
             ctxDrawing.stroke();
         }
@@ -349,5 +367,4 @@
 
         return windowDiv;
     }
-
 })();
