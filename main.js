@@ -277,7 +277,7 @@
     var eraseButton = createButton('Erase', function() {
         eraseMode = !eraseMode;
         if (eraseMode) {
-            currentColor = '#fff'; // Erasing color (white or canvas background color)
+            currentColor = '#333'; // Erasing color (white or canvas background color)
             eraseButton.textContent = 'Draw'; // Change button text to "Draw"
         } else {
             currentColor = '#000'; // Back to drawing color
