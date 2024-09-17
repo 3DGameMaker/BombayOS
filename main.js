@@ -225,11 +225,11 @@
     var youtubeInput = document.createElement('input');
     youtubeInput.style.width = '90%';
     youtubeInput.style.margin = '10px';
-    youtubeInput.placeholder = 'Enter YouTube Video ID';
+    youtubeInput.placeholder = 'Enter YouTube video URL';
     youtubeWin.appendChild(youtubeInput);
 
     var goButton = createButton('Go', function() {
-        var videoID = youtubeInput.value.trim();
+        var videoID = youtubeInput.value.split('v=')[1];
         if (videoID) {
             youtubeIframe.src = 'https://www.youtube.com/embed/' + videoID;
         }
@@ -277,7 +277,7 @@
     var eraseButton = createButton('Erase', function() {
         eraseMode = !eraseMode;
         if (eraseMode) {
-            currentColor = '#333'; // Erasing color (white or canvas background color)
+            currentColor = '#f0f0f0'; // Erasing color matches canvas background
             eraseButton.textContent = 'Draw'; // Change button text to "Draw"
         } else {
             currentColor = '#000'; // Back to drawing color
@@ -301,7 +301,7 @@
 
     canvas.addEventListener('mousemove', function(e) {
         if (drawing) {
-            ctxDrawing.strokeStyle = currentColor; // Set the current drawing color (either black or white)
+            ctxDrawing.strokeStyle = currentColor; // Set the current drawing color (either black or erase color)
             ctxDrawing.lineTo(e.offsetX, e.offsetY);
             ctxDrawing.stroke();
         }
@@ -316,6 +316,7 @@
         drawing = false;
     });
 
+    // Function to bring a window to the front
     function bringToFront(window) {
         var windows = document.querySelectorAll('.window');
         windows.forEach(function(win) {
@@ -324,6 +325,7 @@
         window.style.zIndex = '100';
     }
 
+    // Function to create resizable window
     function createWindow(left, top, width, height, title) {
         var windowDiv = document.createElement('div');
         windowDiv.classList.add('window');
@@ -336,6 +338,8 @@
         windowDiv.style.border = '1px solid #333';
         windowDiv.style.zIndex = '1';
         windowDiv.style.display = 'none';
+        windowDiv.style.resize = 'both'; // Allow resizing
+        windowDiv.style.overflow = 'auto'; // Allow content scrolling if resized
 
         var header = document.createElement('div');
         header.style.backgroundColor = '#333';
@@ -348,6 +352,7 @@
         var closeButton = createCloseButton(windowDiv);
         windowDiv.appendChild(closeButton);
 
+        // Draggable window functionality
         header.onmousedown = function(e) {
             var offsetX = e.clientX - windowDiv.offsetLeft;
             var offsetY = e.clientY - windowDiv.offsetTop;
