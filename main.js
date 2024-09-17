@@ -79,6 +79,18 @@
         return closeButton;
     }
 
+    // Function to handle file uploads
+    function handleFileUpload(input, processFile) {
+        var file = input.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                processFile(event.target.result);
+            };
+            reader.readAsText(file);
+        }
+    }
+
     // Calculator window
     var calcWin = createWindow('100px', '100px', '300px', '300px', 'Calculator');
     document.body.appendChild(calcWin);
@@ -215,17 +227,14 @@
     function resetPong() {
         playerScore = 0;
         aiScore = 0;
-        ballX = pongCanvas.width / 2;
-        ballY = pongCanvas.height / 2;
         ballSpeedX = 2;
         ballSpeedY = 2;
+        startPong();
     }
 
     // YouTube window
-    var youtubeWin = createWindow('150px', '300px', '560px', '315px', 'YouTube Player');
+    var youtubeWin = createWindow('500px', '500px', '560px', '315px', 'YouTube Player');
     document.body.appendChild(youtubeWin);
-
-    youtubeWin.appendChild(createCloseButton(youtubeWin));
 
     var youtubeInput = document.createElement('input');
     youtubeInput.placeholder = 'Enter YouTube video URL';
@@ -253,8 +262,22 @@
 
     var notepadTextArea = document.createElement('textarea');
     notepadTextArea.style.width = '100%';
-    notepadTextArea.style.height = '90%';
+    notepadTextArea.style.height = '80%';
+    notepadTextArea.placeholder = 'Enter or load text here...';
     notepadWin.appendChild(notepadTextArea);
+
+    var uploadButton = createButton('Upload Text File', function() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.txt';
+        input.onchange = function() {
+            handleFileUpload(input, function(content) {
+                notepadTextArea.value = content;
+            });
+        };
+        input.click();
+    });
+    notepadWin.appendChild(uploadButton);
 
     notepadWin.appendChild(createCloseButton(notepadWin));
 
@@ -267,57 +290,29 @@
     canvas.height = 400;
     drawingWin.appendChild(canvas);
 
+    var uploadImageButton = createButton('Upload Image', function() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = function() {
+            var file = input.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(event) {
+                    var img = new Image();
+                    img.onload = function() {
+                        ctxDrawing.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    });
+    drawingWin.appendChild(uploadImageButton);
+
     drawingWin.appendChild(createCloseButton(drawingWin));
-
-    var ctxDrawing = canvas.getContext('2d');
-    var drawing = false;
-    var eraseMode = false; // Track whether erasing is enabled
-
-    // Set the initial drawing color
-    var currentColor = '#000';
-
-    // Add the "Erase" button
-    var eraseButton = createButton('Erase', function() {
-        eraseMode = !eraseMode;
-        if (eraseMode) {
-            currentColor = '#f0f0f0'; // Erasing color matches canvas background
-            eraseButton.textContent = 'Draw'; // Change button text to "Draw"
-        } else {
-            currentColor = '#000'; // Back to drawing color
-            eraseButton.textContent = 'Erase'; // Change button text to "Erase"
-        }
-    });
-    drawingWin.appendChild(eraseButton);
-
-    // Add the "Clear Canvas" button
-    var clearButton = createButton('Clear Canvas', function() {
-        ctxDrawing.clearRect(0, 0, canvas.width, canvas.height);
-    });
-    drawingWin.appendChild(clearButton);
-
-    // Drawing functionality
-    canvas.addEventListener('mousedown', function(e) {
-        drawing = true;
-        ctxDrawing.beginPath();
-        ctxDrawing.moveTo(e.offsetX, e.offsetY);
-    });
-
-    canvas.addEventListener('mousemove', function(e) {
-        if (drawing) {
-            ctxDrawing.strokeStyle = currentColor; // Set the current drawing color (either black or erase color)
-            ctxDrawing.lineTo(e.offsetX, e.offsetY);
-            ctxDrawing.stroke();
-        }
-    });
-
-    canvas.addEventListener('mouseup', function() {
-        drawing = false;
-        ctxDrawing.closePath();
-    });
-
-    canvas.addEventListener('mouseleave', function() {
-        drawing = false;
-    });
 
     // HTML Viewer window
     var htmlViewerWin = createWindow('600px', '200px', '600px', '400px', 'HTML Viewer');
@@ -325,19 +320,33 @@
 
     var htmlTextArea = document.createElement('textarea');
     htmlTextArea.style.width = '100%';
-    htmlTextArea.style.height = '50%';
-    htmlTextArea.placeholder = 'Enter your HTML code here...';
+    htmlTextArea.style.height = '40%';
+    htmlTextArea.placeholder = 'Enter or load HTML code here...';
     htmlViewerWin.appendChild(htmlTextArea);
+
+    var viewHtmlButton = createButton('View HTML', function() {
+        htmlIframe.srcdoc = htmlTextArea.value;
+    });
+    htmlViewerWin.appendChild(viewHtmlButton);
+
+    var uploadHtmlButton = createButton('Upload HTML File', function() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.html';
+        input.onchange = function() {
+            handleFileUpload(input, function(content) {
+                htmlTextArea.value = content;
+                htmlIframe.srcdoc = content;
+            });
+        };
+        input.click();
+    });
+    htmlViewerWin.appendChild(uploadHtmlButton);
 
     var htmlIframe = document.createElement('iframe');
     htmlIframe.style.width = '100%';
-    htmlIframe.style.height = '50%';
+    htmlIframe.style.height = '60%';
     htmlViewerWin.appendChild(htmlIframe);
-
-    var viewHtmlButton = createButton('View HTML', function() {
-        htmlIframe.srcdoc = htmlTextArea.value; // Set iframe content to HTML entered in textarea
-    });
-    htmlViewerWin.appendChild(viewHtmlButton);
 
     htmlViewerWin.appendChild(createCloseButton(htmlViewerWin));
 
