@@ -1,4 +1,4 @@
- (function() {
+(function() {
     document.body.innerHTML = '';
     document.body.style.backgroundImage = 'url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAPiNX2QwJRFJcH6FaCBmu4txdd2UOp4cunRU9c8ymI6lvPgikDGvomSU5lskb5Et56mk&usqp=CAU)';
     document.body.style.backgroundSize = 'cover';
