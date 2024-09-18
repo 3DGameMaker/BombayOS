@@ -1,4 +1,4 @@
-(function() {
+ (function() {
     document.body.innerHTML = '';
     document.body.style.backgroundImage = 'url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSAPiNX2QwJRFJcH6FaCBmu4txdd2UOp4cunRU9c8ymI6lvPgikDGvomSU5lskb5Et56mk&usqp=CAU)';
     document.body.style.backgroundSize = 'cover';
@@ -124,12 +124,12 @@
         return win;
     }
 
-    function bringToFront(win, isAlwaysOnTop = false) {
+    function bringToFront(win) {
         var allWindows = document.querySelectorAll('div[style*="z-index: 100000"]');
         allWindows.forEach(function(window) {
             window.style.zIndex = '99999';
         });
-        win.style.zIndex = isAlwaysOnTop ? 'Infinity' : '100000';
+        win.style.zIndex = '100000';
     }
 
     // Calculator window
@@ -229,75 +229,157 @@
         ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
         ctx.fill();
         ctx.font = '20px Arial';
-        ctx.fillText(`Player: ${playerScore}`, 20, 20);
-        ctx.fillText(`AI: ${aiScore}`, pongCanvas.width - 80, 20);
+        ctx.fillText('Player: ' + playerScore, 20, 30);
+        ctx.fillText('AI: ' + aiScore, pongCanvas.width - 60, 30);
+
         ballX += ballSpeedX;
         ballY += ballSpeedY;
-        if (ballY < ballRadius || ballY > pongCanvas.height - ballRadius) ballSpeedY *= -1;
-        if (ballX < paddleWidth && ballY > playerY && ballY < playerY + paddleHeight) ballSpeedX *= -1;
-        if (ballX > pongCanvas.width - paddleWidth && ballY > aiY && ballY < aiY + paddleHeight) ballSpeedX *= -1;
-        if (ballX < 0) { aiScore++; resetBall(); }
-        if (ballX > pongCanvas.width) { playerScore++; resetBall(); }
-        aiY = ballY - paddleHeight / 2;
+
+        if (ballY + ballSpeedY > pongCanvas.height - ballRadius || ballY + ballSpeedY < ballRadius) ballSpeedY = -ballSpeedY;
+        if (ballX + ballSpeedX > pongCanvas.width - ballRadius) {
+            if (ballY > aiY && ballY < aiY + paddleHeight) ballSpeedX = -ballSpeedX;
+            else {
+                playerScore++;
+                resetBall();
+            }
+        }
+        if (ballX + ballSpeedX < ballRadius) {
+            if (ballY > playerY && ballY < playerY + paddleHeight) ballSpeedX = -ballSpeedX;
+            else {
+                aiScore++;
+                resetBall();
+            }
+        }
+
+        aiY += (ballY - (aiY + paddleHeight / 2)) * 0.1;
+
         requestAnimationFrame(drawPong);
     }
 
     function resetBall() {
         ballX = pongCanvas.width / 2;
         ballY = pongCanvas.height / 2;
-        ballSpeedX *= -1;
+        ballSpeedX = -ballSpeedX;
     }
 
     // YouTube Player window
-    var youtubeWin = createWindow('100px', '300px', '560px', '315px', 'YouTube Player');
+    var youtubeWin = createWindow('100px', '100px', '600px', '400px', 'YouTube Player');
     document.body.appendChild(youtubeWin);
 
-    var youtubeIframe = document.createElement('iframe');
-    youtubeIframe.width = '560';
-    youtubeIframe.height = '315';
-    youtubeIframe.src = 'https://www.youtube.com/embed/dQw4w9WgXcQ';
-    youtubeIframe.frameBorder = '0';
-    youtubeIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-    youtubeIframe.allowFullscreen = true;
-    youtubeWin.appendChild(youtubeIframe);
+    var youtubeInput = document.createElement('input');
+    youtubeInput.type = 'text';
+    youtubeInput.style.width = '80%';
+    youtubeInput.style.margin = '10px';
+    youtubeInput.placeholder = 'Enter YouTube video URL';
+    youtubeWin.appendChild(youtubeInput);
 
-    youtubeWin.appendChild(createCloseButton(youtubeWin));
+    var goButton = createButton('Go', function() {
+        var url = youtubeInput.value;
+        var videoID = getYouTubeVideoID(url);
+        if (videoID) {
+            var iframe = document.createElement('iframe');
+            iframe.width = '100%';
+            iframe.height = '100%';
+            iframe.src = 'https://www.youtube.com/embed/' + videoID;
+            iframe.frameBorder = '0';
+            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            youtubeWin.innerHTML = ''; // Clear previous content
+            youtubeWin.appendChild(iframe);
+            youtubeWin.appendChild(createCloseButton(youtubeWin));
+        } else {
+            alert('Invalid YouTube URL');
+        }
+    });
+    youtubeWin.appendChild(goButton);
+
+    function getYouTubeVideoID(url) {
+        var videoID = '';
+        var regex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|v\/|(?:.+[?&]v=)|(?:.*[?&]v=))|youtu\.be\/)([^"&?\/\s]{11})/;
+        var match = url.match(regex);
+        if (match) {
+            videoID = match[1];
+        }
+        return videoID;
+    }
 
     // Notepad window
-    var notepadWin = createWindow('200px', '400px', '300px', '300px', 'Notepad');
+    var notepadWin = createWindow('400px', '200px', '600px', '400px', 'Notepad');
     document.body.appendChild(notepadWin);
 
-    var textarea = document.createElement('textarea');
-    textarea.style.width = '100%';
-    textarea.style.height = 'calc(100% - 30px)';
-    notepadWin.appendChild(textarea);
+    var notepadTextArea = document.createElement('textarea');
+    notepadTextArea.style.width = '100%';
+    notepadTextArea.style.height = 'calc(100% - 40px)';
+    notepadTextArea.style.fontSize = '16px';
+    notepadTextArea.style.padding = '10px';
+    notepadTextArea.style.border = 'none';
+    notepadTextArea.style.boxSizing = 'border-box';
+    notepadWin.appendChild(notepadTextArea);
 
     notepadWin.appendChild(createCloseButton(notepadWin));
 
-    // Drawing app window
-    var drawingWin = createWindow('300px', '600px', '500px', '400px', 'Drawing App');
+    var uploadButton = createButton('Upload File', function() {
+        document.getElementById('notepadFileInput').click();
+    });
+    notepadWin.appendChild(uploadButton);
+
+    var fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.id = 'notepadFileInput';
+    fileInput.style.display = 'none';
+    fileInput.addEventListener('change', function(event) {
+        var file = event.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                notepadTextArea.value = e.target.result;
+            };
+            reader.readAsText(file);
+        }
+    });
+    document.body.appendChild(fileInput);
+
+    var saveButton = createButton('Save File', function() {
+        var blob = new Blob([notepadTextArea.value], { type: 'text/plain' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'note.txt';
+        a.click();
+        URL.revokeObjectURL(url);
+    });
+    notepadWin.appendChild(saveButton);
+
+    // Drawing App window
+    var drawingWin = createWindow('400px', '500px', '600px', '400px', 'Drawing App');
     document.body.appendChild(drawingWin);
 
     var canvas = document.createElement('canvas');
-    canvas.width = 500;
+    canvas.width = 600;
     canvas.height = 400;
+    canvas.style.border = '1px solid #000';
     drawingWin.appendChild(canvas);
 
     var ctxDrawing = canvas.getContext('2d');
-    ctxDrawing.fillStyle = 'white';
+    ctxDrawing.fillStyle = '#fff';
     ctxDrawing.fillRect(0, 0, canvas.width, canvas.height);
-
     var isDrawing = false;
+    var lastX, lastY;
 
-    canvas.addEventListener('mousedown', function() {
+    canvas.addEventListener('mousedown', function(e) {
         isDrawing = true;
-        ctxDrawing.beginPath();
+        lastX = e.offsetX;
+        lastY = e.offsetY;
     });
 
     canvas.addEventListener('mousemove', function(e) {
         if (isDrawing) {
+            ctxDrawing.beginPath();
+            ctxDrawing.moveTo(lastX, lastY);
             ctxDrawing.lineTo(e.offsetX, e.offsetY);
             ctxDrawing.stroke();
+            lastX = e.offsetX;
+            lastY = e.offsetY;
         }
     });
 
@@ -305,23 +387,68 @@
         isDrawing = false;
     });
 
-    // Add Erase button
-    var eraseButton = createButton('Erase', function() {
-        ctxDrawing.strokeStyle = '#fff'; // Set to white to simulate erasing
-    });
-    drawingWin.appendChild(eraseButton);
-
-    // Add Erase All button
-    var eraseAllButton = createButton('Erase All', function() {
-        ctxDrawing.clearRect(0, 0, canvas.width, canvas.height); // Clear the entire canvas
-    });
-    drawingWin.appendChild(eraseAllButton);
-
     drawingWin.appendChild(createCloseButton(drawingWin));
 
+    var uploadButtonDrawing = createButton('Upload Image', function() {
+        document.getElementById('drawingFileInput').click();
+    });
+    drawingWin.appendChild(uploadButtonDrawing);
+
+    var fileInputDrawing = document.createElement('input');
+    fileInputDrawing.type = 'file';
+    fileInputDrawing.id = 'drawingFileInput';
+    fileInputDrawing.style.display = 'none';
+    fileInputDrawing.addEventListener('change', function(event) {
+        var file = event.target.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var img = new Image();
+                img.onload = function() {
+                    ctxDrawing.clearRect(0, 0, canvas.width, canvas.height);
+                    ctxDrawing.drawImage(img, 0, 0, canvas.width, canvas.height);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    document.body.appendChild(fileInputDrawing);
+
+    var saveButtonDrawing = createButton('Save Drawing', function() {
+        var link = document.createElement('a');
+        link.download = 'drawing.png';
+        link.href = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+        link.click();
+    });
+    drawingWin.appendChild(saveButtonDrawing);
+
     // Settings window
-    var settingsWin = createWindow('150px', '150px', '200px', '200px', 'Settings');
+    var settingsWin = createWindow('200px', '100px', '400px', '300px', 'Settings');
     document.body.appendChild(settingsWin);
 
+    var bgInput = document.createElement('input');
+    bgInput.type = 'text';
+    bgInput.style.width = '80%';
+    bgInput.style.margin = '10px';
+    bgInput.placeholder = 'Enter background image URL';
+    settingsWin.appendChild(bgInput);
+
+    var saveSettingsButton = createButton('Save Settings', function() {
+        var bgImageUrl = bgInput.value;
+        document.body.style.backgroundImage = 'url(' + bgImageUrl + ')';
+        document.body.style.backgroundSize = 'cover';
+        localStorage.setItem('backgroundImage', bgImageUrl);
+    });
+    settingsWin.appendChild(saveSettingsButton);
+
     settingsWin.appendChild(createCloseButton(settingsWin));
+
+    // Load saved background image
+    var savedBgImage = localStorage.getItem('backgroundImage');
+    if (savedBgImage) {
+        document.body.style.backgroundImage = 'url(' + savedBgImage + ')';
+        document.body.style.backgroundSize = 'cover';
+        bgInput.value = savedBgImage;
+    }
 })();
