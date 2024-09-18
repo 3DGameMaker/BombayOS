@@ -15,10 +15,9 @@
     taskbar.style.display = 'flex';
     taskbar.style.alignItems = 'center';
     taskbar.style.justifyContent = 'center';
-    taskbar.style.zIndex = '999999'; // Super high z-index
+    taskbar.style.zIndex = '99999'; // Ensure taskbar is always on top
     document.body.appendChild(taskbar);
 
-    // Function to create buttons
     function createButton(text, onclick) {
         var button = document.createElement('button');
         button.textContent = text;
@@ -32,7 +31,53 @@
         return button;
     }
 
-    // Create window
+    taskbar.appendChild(createButton('Open Calculator', function() {
+        bringToFront(calcWin);
+        calcWin.style.display = 'block';
+    }));
+
+    taskbar.appendChild(createButton('Open Pong', function() {
+        bringToFront(pongWin);
+        pongWin.style.display = 'block';
+        startPong();
+    }));
+
+    taskbar.appendChild(createButton('Open YouTube Player', function() {
+        bringToFront(youtubeWin);
+        youtubeWin.style.display = 'block';
+    }));
+
+    taskbar.appendChild(createButton('Open Notepad', function() {
+        bringToFront(notepadWin);
+        notepadWin.style.display = 'block';
+    }));
+
+    taskbar.appendChild(createButton('Open Drawing App', function() {
+        bringToFront(drawingWin);
+        drawingWin.style.display = 'block';
+    }));
+
+    taskbar.appendChild(createButton('Open Settings', function() {
+        bringToFront(settingsWin);
+        settingsWin.style.display = 'block';
+    }));
+
+    function createCloseButton(window) {
+        var closeButton = document.createElement('button');
+        closeButton.textContent = 'X';
+        closeButton.style.position = 'absolute';
+        closeButton.style.top = '5px';
+        closeButton.style.right = '5px';
+        closeButton.style.backgroundColor = '#ff5c5c';
+        closeButton.style.border = 'none';
+        closeButton.style.color = 'white';
+        closeButton.style.cursor = 'pointer';
+        closeButton.onclick = function() {
+            window.style.display = 'none';
+        };
+        return closeButton;
+    }
+
     function createWindow(top, left, width, height, title) {
         var win = document.createElement('div');
         win.style.position = 'absolute';
@@ -43,7 +88,7 @@
         win.style.border = '1px solid #000';
         win.style.backgroundColor = '#fff';
         win.style.boxShadow = '0 0 10px rgba(0,0,0,0.5)';
-        win.style.zIndex = '999999'; // Super high z-index
+        win.style.zIndex = '100000'; // Ensure windows are above other content
         win.style.display = 'none';
         win.style.overflow = 'hidden';
         win.style.resize = 'both';
@@ -79,87 +124,180 @@
         return win;
     }
 
-    function bringToFront(win) {
-        var allWindows = document.querySelectorAll('div[style*="z-index: 999999"]');
+    function bringToFront(win, isAlwaysOnTop = false) {
+        var allWindows = document.querySelectorAll('div[style*="z-index: 100000"]');
         allWindows.forEach(function(window) {
-            window.style.zIndex = '999999';
+            window.style.zIndex = '99999';
         });
-        win.style.zIndex = '1000000'; // Higher z-index to bring to front
+        win.style.zIndex = isAlwaysOnTop ? 'Infinity' : '100000';
+    }
+
+    // Calculator window
+    var calcWin = createWindow('100px', '100px', '300px', '300px', 'Calculator');
+    document.body.appendChild(calcWin);
+
+    var input = document.createElement('input');
+    input.id = 'calcInput';
+    input.style.width = '100%';
+    input.style.fontSize = '20px';
+    input.style.marginBottom = '10px';
+    input.readOnly = true;
+    calcWin.appendChild(input);
+
+    calcWin.appendChild(createCloseButton(calcWin));
+
+    var buttons = [7, 8, 9, '/', 4, 5, 6, '*', 1, 2, 3, '-', 0, '.', '+', 'C', '='];
+    buttons.forEach(function(btn) {
+        var button = document.createElement('button');
+        button.textContent = btn;
+        button.style.width = '20%';
+        button.style.fontSize = '18px';
+        button.style.margin = '2px';
+        button.onclick = function() {
+            if (btn === '=') {
+                try {
+                    input.value = manualCalc(input.value);
+                } catch (e) {
+                    input.value = 'Error';
+                }
+            } else if (btn === 'C') {
+                input.value = '';
+            } else {
+                input.value += btn;
+            }
+        };
+        calcWin.appendChild(button);
+    });
+
+    function manualCalc(expression) {
+        let operators = ['+', '-', '*', '/'];
+        let tokens = expression.split(/([+\-*/])/);
+        tokens = tokens.map(t => t.trim()).filter(t => t.length > 0);
+        let result = parseFloat(tokens[0]);
+
+        for (let i = 1; i < tokens.length; i += 2) {
+            let operator = tokens[i];
+            let nextNum = parseFloat(tokens[i + 1]);
+
+            if (operator === '+') {
+                result += nextNum;
+            } else if (operator === '-') {
+                result -= nextNum;
+            } else if (operator === '*') {
+                result *= nextNum;
+            } else if (operator === '/') {
+                result /= nextNum;
+            }
+        }
+
+        return result;
+    }
+
+    // Pong window
+    var pongWin = createWindow('100px', '500px', '400px', '300px', 'Pong');
+    document.body.appendChild(pongWin);
+
+    var pongCanvas = document.createElement('canvas');
+    pongCanvas.width = 400;
+    pongCanvas.height = 300;
+    pongWin.appendChild(pongCanvas);
+
+    pongWin.appendChild(createCloseButton(pongWin));
+
+    var ctx = pongCanvas.getContext('2d');
+    var paddleWidth = 10, paddleHeight = 60;
+    var ballRadius = 10;
+    var playerY = pongCanvas.height / 2 - paddleHeight / 2, aiY = playerY;
+    var ballX = pongCanvas.width / 2, ballY = pongCanvas.height / 2;
+    var ballSpeedX = 2, ballSpeedY = 2;
+    var playerScore = 0, aiScore = 0;
+
+    function startPong() {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowUp' && playerY > 0) playerY -= 20;
+            if (e.key === 'ArrowDown' && playerY < pongCanvas.height - paddleHeight) playerY += 20;
+        });
+        requestAnimationFrame(drawPong);
+    }
+
+    function drawPong() {
+        ctx.clearRect(0, 0, pongCanvas.width, pongCanvas.height);
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, playerY, paddleWidth, paddleHeight);
+        ctx.fillRect(pongCanvas.width - paddleWidth, aiY, paddleWidth, paddleHeight);
+        ctx.beginPath();
+        ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.font = '20px Arial';
+        ctx.fillText(`Player: ${playerScore}`, 20, 20);
+        ctx.fillText(`AI: ${aiScore}`, pongCanvas.width - 80, 20);
+        ballX += ballSpeedX;
+        ballY += ballSpeedY;
+        if (ballY < ballRadius || ballY > pongCanvas.height - ballRadius) ballSpeedY *= -1;
+        if (ballX < paddleWidth && ballY > playerY && ballY < playerY + paddleHeight) ballSpeedX *= -1;
+        if (ballX > pongCanvas.width - paddleWidth && ballY > aiY && ballY < aiY + paddleHeight) ballSpeedX *= -1;
+        if (ballX < 0) { aiScore++; resetBall(); }
+        if (ballX > pongCanvas.width) { playerScore++; resetBall(); }
+        aiY = ballY - paddleHeight / 2;
+        requestAnimationFrame(drawPong);
+    }
+
+    function resetBall() {
+        ballX = pongCanvas.width / 2;
+        ballY = pongCanvas.height / 2;
+        ballSpeedX *= -1;
     }
 
     // YouTube Player window
-    var youtubeWin = createWindow('100px', '100px', '600px', '400px', 'YouTube Player');
+    var youtubeWin = createWindow('100px', '300px', '560px', '315px', 'YouTube Player');
     document.body.appendChild(youtubeWin);
 
-    var youtubeInput = document.createElement('input');
-    youtubeInput.type = 'text';
-    youtubeInput.style.width = '80%';
-    youtubeInput.style.margin = '10px';
-    youtubeInput.placeholder = 'Enter YouTube video URL';
-    youtubeWin.appendChild(youtubeInput);
+    var youtubeIframe = document.createElement('iframe');
+    youtubeIframe.width = '560';
+    youtubeIframe.height = '315';
+    youtubeIframe.src = 'https://www.youtube.com/embed/dQw4w9WgXcQ';
+    youtubeIframe.frameBorder = '0';
+    youtubeIframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    youtubeIframe.allowFullscreen = true;
+    youtubeWin.appendChild(youtubeIframe);
 
-    var goButton = createButton('Go', function() {
-        var url = youtubeInput.value;
-        var videoID = getYouTubeVideoID(url);
-        if (videoID) {
-            var iframe = document.createElement('iframe');
-            iframe.width = '100%';
-            iframe.height = '100%';
-            iframe.src = 'https://www.youtube.com/embed/' + videoID;
-            iframe.frameBorder = '0';
-            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-            iframe.allowFullscreen = true;
-            youtubeWin.innerHTML = ''; // Clear previous content
-            youtubeWin.appendChild(iframe);
-            youtubeWin.appendChild(createCloseButton(youtubeWin));
-        } else {
-            alert('Invalid YouTube URL');
-        }
-    });
-    youtubeWin.appendChild(goButton);
+    youtubeWin.appendChild(createCloseButton(youtubeWin));
 
-    youtubeWin.appendChild(createCloseButton(youtubeWin)); // Add close button here
+    // Notepad window
+    var notepadWin = createWindow('200px', '400px', '300px', '300px', 'Notepad');
+    document.body.appendChild(notepadWin);
 
-    function getYouTubeVideoID(url) {
-        var videoID = '';
-        var regex = /(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|v\/|(?:.+[?&]v=)|(?:.*[?&]v=))|youtu\.be\/)([^"&?\/\s]{11})/;
-        var match = url.match(regex);
-        if (match) {
-            videoID = match[1];
-        }
-        return videoID;
-    }
+    var textarea = document.createElement('textarea');
+    textarea.style.width = '100%';
+    textarea.style.height = 'calc(100% - 30px)';
+    notepadWin.appendChild(textarea);
 
-    // Drawing App window
-    var drawingWin = createWindow('400px', '500px', '600px', '400px', 'Drawing App');
+    notepadWin.appendChild(createCloseButton(notepadWin));
+
+    // Drawing app window
+    var drawingWin = createWindow('300px', '600px', '500px', '400px', 'Drawing App');
     document.body.appendChild(drawingWin);
 
     var canvas = document.createElement('canvas');
-    canvas.width = 600;
+    canvas.width = 500;
     canvas.height = 400;
-    canvas.style.border = '1px solid #000';
     drawingWin.appendChild(canvas);
 
     var ctxDrawing = canvas.getContext('2d');
-    ctxDrawing.fillStyle = '#fff';
+    ctxDrawing.fillStyle = 'white';
     ctxDrawing.fillRect(0, 0, canvas.width, canvas.height);
-    var isDrawing = false;
-    var lastX, lastY;
 
-    canvas.addEventListener('mousedown', function(e) {
+    var isDrawing = false;
+
+    canvas.addEventListener('mousedown', function() {
         isDrawing = true;
-        lastX = e.offsetX;
-        lastY = e.offsetY;
+        ctxDrawing.beginPath();
     });
 
     canvas.addEventListener('mousemove', function(e) {
         if (isDrawing) {
-            ctxDrawing.beginPath();
-            ctxDrawing.moveTo(lastX, lastY);
             ctxDrawing.lineTo(e.offsetX, e.offsetY);
             ctxDrawing.stroke();
-            lastX = e.offsetX;
-            lastY = e.offsetY;
         }
     });
 
@@ -167,22 +305,23 @@
         isDrawing = false;
     });
 
-    drawingWin.appendChild(createCloseButton(drawingWin));
-
-    // Erase tool
+    // Add Erase button
     var eraseButton = createButton('Erase', function() {
-        ctxDrawing.strokeStyle = '#fff'; // Set stroke color to white
-        ctxDrawing.lineWidth = 10; // Thicker "erase" line
+        ctxDrawing.strokeStyle = '#fff'; // Set to white to simulate erasing
     });
     drawingWin.appendChild(eraseButton);
 
-    // Erase all tool
+    // Add Erase All button
     var eraseAllButton = createButton('Erase All', function() {
-        ctxDrawing.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-        ctxDrawing.fillStyle = '#fff';
-        ctxDrawing.fillRect(0, 0, canvas.width, canvas.height); // Repaint white background
+        ctxDrawing.clearRect(0, 0, canvas.width, canvas.height); // Clear the entire canvas
     });
     drawingWin.appendChild(eraseAllButton);
 
     drawingWin.appendChild(createCloseButton(drawingWin));
+
+    // Settings window
+    var settingsWin = createWindow('150px', '150px', '200px', '200px', 'Settings');
+    document.body.appendChild(settingsWin);
+
+    settingsWin.appendChild(createCloseButton(settingsWin));
 })();
